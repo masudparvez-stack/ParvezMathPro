@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
@@ -10,29 +10,72 @@
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header">
-            <h2>📐 Parvez Math Pro</h2>
-            <p>AI Math OCR &amp; EQ Field Formatter</p>
-        </header>
+        
+        <!-- Top Brand Header with Version Badge -->
+        <div class="brand-header">
+            <div class="brand-left">
+                <div class="brand-logo">∫≈</div>
+                <div class="brand-titles">
+                    <h1>Parvez Math &amp; EQ<br>Converter Pro</h1>
+                </div>
+            </div>
+            <span class="version-badge" id="versionBadge">v2.4.0</span>
+        </div>
 
-        <!-- API Settings Collapsible -->
+        <!-- User Account & Subscription Card -->
+        <div class="account-card">
+            <!-- Logged In View -->
+            <div id="loggedInView">
+                <div class="account-row">
+                    <span class="user-email" id="userEmailDisplay">masudparvezpmk@gmail.com</span>
+                    <button class="link-btn" id="signOutBtn">Sign out</button>
+                </div>
+                <div class="account-divider"></div>
+                <div class="sub-info">
+                    <div class="sub-plan">
+                        <span class="status-dot"></span>
+                        <strong id="subPlanName">Diamond (1 Year)</strong>
+                    </div>
+                    <div class="sub-expiry" id="subExpiryDate">Expires 11/05/2027 11:59 PM</div>
+                </div>
+            </div>
+
+            <!-- Logged Out / Sign In Form -->
+            <div id="loggedOutView" class="hidden">
+                <label class="small-label">Account Sign In (Enter Registered Email):</label>
+                <div class="signin-row">
+                    <input type="email" id="loginEmailInput" placeholder="yourname@gmail.com" />
+                    <button id="signInBtn" class="btn-primary-sm">Sign in</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- API & Updated AI Model Settings (3.8 Flash, 3.1 Pro, 4 Argon) -->
         <details class="settings-box" id="apiSettings">
-            <summary>⚙️ API Keys &amp; Model Settings</summary>
+            <summary>⚙️ API Keys &amp; AI Model (<span id="activeModelLabel">3.8 Flash</span>)</summary>
             <div class="settings-content">
-                <label>Gemini API Keys (কমা বা নতুন লাইনে একাধিক দিতে পারেন):</label>
-                <textarea id="apiKeysInput" rows="3" placeholder="AIzaSy... (Key 1)&#10;AIzaSy... (Key 2)"></textarea>
+                <label>Gemini API Keys (একাধিক Key নতুন লাইনে দিন):</label>
+                <textarea id="apiKeysInput" rows="2" placeholder="AIzaSy... (Key 1)&#10;AIzaSy... (Key 2)"></textarea>
                 
                 <label>Primary AI Model:</label>
-                <select id="modelSelect">
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Complex Math)</option>
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast Backup)</option>
+                <select id="modelSelect" class="dark-model-select">
+                    <option value="3.8-flash">3.8 Flash — All-around help</option>
+                    <option value="3.1-pro">3.1 Pro — Advanced reasoning</option>
+                    <option value="4-argon">4 Argon — Complex tasks</option>
                 </select>
+
+                <label>Thinking level:</label>
+                <select id="thinkingSelect">
+                    <option value="high">High (Deep Math Accuracy)</option>
+                    <option value="medium" selected>Medium (Balanced Speed)</option>
+                    <option value="low">Low (Fastest)</option>
+                </select>
+
                 <button id="saveKeysBtn" class="btn-secondary">💾 Save Settings</button>
             </div>
         </details>
 
-        <!-- Extraction Mode Switch -->
+        <!-- Extraction Mode -->
         <div class="card">
             <label for="extractMode"><strong>🎯 Extraction Mode:</strong></label>
             <select id="extractMode" class="full-select">
@@ -41,7 +84,7 @@
             </select>
         </div>
 
-        <!-- Step 1: Image Input -->
+        <!-- Step 1: Image Upload / Paste -->
         <div class="card">
             <label><strong>১. ছবি যুক্ত করুন (Upload or Ctrl+V):</strong></label>
             <div id="dropZone" class="drop-zone" tabindex="0">
@@ -51,23 +94,62 @@
             </div>
             <div class="btn-row">
                 <button id="extractBtn" class="btn-primary" disabled>🤖 1. Extract EQ from Image</button>
-                <button id="clearImgBtn" class="btn-danger hidden">✖</button>
+                <button id="clearImgBtn" class="btn-danger hidden" title="Remove Image">✖</button>
             </div>
         </div>
 
         <!-- Status Bar -->
         <div id="statusBox" class="status-box">Ready.</div>
 
-        <!-- Step 2: Raw Text / Manual Paste & Format -->
+        <!-- Step 2: EQ Text Preview with Refresh/Clear Button -->
         <div class="card">
             <div class="label-row">
-                <label><strong>২. EQ টেক্সট প্রিভিউ / ম্যানুয়াল পেস্ট:</strong></label>
-                <button id="copyPromptBtn" class="btn-small" title="Copy prompt for AI Studio">📋 Copy Prompt</button>
+                <label><strong>২. EQ টেক্সট প্রিভিউ /<br>ম্যানুয়াল পেস্ট:</strong></label>
+                <div class="action-btns">
+                    <button id="clearTextBtn" class="btn-icon-small" title="মুছে খালি করুন (Clear Text)">🔄 Clear</button>
+                    <button id="copyPromptBtn" class="btn-small" title="Copy prompt for AI Studio">📋 Copy Prompt</button>
+                </div>
             </div>
-            <textarea id="rawTextInput" rows="7" placeholder="ছবি থেকে অটোমেটিক কোড এখানে আসবে, অথবা AI Studio থেকে কপি করা { EQ ... } টেক্সট এখানে সরাসরি পেস্ট করুন..."></textarea>
+            <textarea id="rawTextInput" rows="6" placeholder="ছবি থেকে অটোমেটিক কোড এখানে আসবে, অথবা AI Studio থেকে কপি করা { EQ ... } টেক্সট এখানে সরাসরি পেস্ট করুন..."></textarea>
             
             <button id="insertFormattedBtn" class="btn-success">✨ Format &amp; Insert to Word</button>
         </div>
+
+        <!-- Web Version Banner -->
+        <a href="https://masudparvez-stack.github.io/ParvezMathPro/taskpane.html" target="_blank" class="web-version-card">
+            <div class="web-icon">🌐</div>
+            <div class="web-text">
+                <strong>Go to Web Version</strong>
+                <span>Open browser converter • 100% Free</span>
+            </div>
+            <div class="web-arrow">→</div>
+        </a>
+
+        <!-- Error / Unconverted EQ Report Box -->
+        <div class="report-card">
+            <input type="text" id="reportTextInput" placeholder="কনভার্ট না হওয়া সমীকরণ/ফিল্ড কোড লিখুন বা স্ক্রিনশট দিন..." />
+            <input type="file" id="reportFileInput" accept="image/*" class="hidden" />
+            <button id="reportImgBtn" class="report-attach-btn" title="স্ক্রিনশট/ছবি যুক্ত করুন">🖼️</button>
+            <button id="reportSendBtn" class="report-send-btn" title="পাঠিয়ে দিন (Send Report)">➤</button>
+        </div>
+        <div id="reportAttachmentStatus" class="report-attach-status hidden"></div>
+
+        <!-- Support Buttons (WhatsApp & Email) -->
+        <div class="support-row">
+            <button id="whatsappSupportBtn" class="support-btn whatsapp-btn">
+                <span class="wa-icon">💬</span> WhatsApp Support
+            </button>
+            <button id="emailSupportBtn" class="support-btn email-btn">
+                <span class="em-icon">✉️</span> Email Support
+            </button>
+        </div>
+
+        <!-- Developer & Copyright Footer -->
+        <footer class="app-footer">
+            <span>Developed by <strong>Masud Parvej</strong></span>
+            <span>© 2026 Abrar Softtech</span>
+        </footer>
+
     </div>
 
     <script src="taskpane.js"></script>

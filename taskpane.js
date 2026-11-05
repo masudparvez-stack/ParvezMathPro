@@ -1,35 +1,56 @@
 /* global Office, Word */
 
+// ==========================================
+// DEVELOPER & SUPPORT CONFIGURATION
+// (আপনার হোয়াটসঅ্যাপ নম্বর ও ইমেইল এখানে পরিবর্তন করতে পারেন)
+// ==========================================
+const SUPPORT_CONFIG = {
+    whatsappNumber: "8801641034759", // আপনার দেশের কোডসহ WhatsApp নম্বর দিন
+    supportEmail: "masudparvezpmk@gmail.com", // আপনার সাপোর্ট ইমেইল দিন
+    appVersion: "v2.4.0"
+};
+
 let currentImageBase64 = null;
 let currentImageMime = null;
+let reportImageName = null;
 
-Office.onReady((info) => {
-    if (info.host === Office.HostType.Word) {
-        initApp();
-    } else {
-        initApp(); // Fallback for browser testing
-    }
+Office.onReady(() => {
+    initApp();
 });
 
 function initApp() {
-    // Load saved API keys
+    // 1. Account & Subscription Initialization
+    initAccountSystem();
+
+    // 2. Load saved API keys & AI Model (3.8 Flash, 3.1 Pro, 4 Argon)
     const savedKeys = localStorage.getItem("parvez_gemini_keys") || "";
-    const savedModel = localStorage.getItem("parvez_gemini_model") || "gemini-2.5-flash";
+    const savedModel = localStorage.getItem("parvez_gemini_model") || "3.8-flash";
+    const savedThinking = localStorage.getItem("parvez_thinking_level") || "medium";
+
     document.getElementById("apiKeysInput").value = savedKeys;
-    document.getElementById("modelSelect").value = savedModel;
+    const modelSelect = document.getElementById("modelSelect");
+    if ([...modelSelect.options].some(o => o.value === savedModel)) {
+        modelSelect.value = savedModel;
+    }
+    document.getElementById("thinkingSelect").value = savedThinking;
+    updateModelSummaryLabel();
 
     if (!savedKeys) {
         document.getElementById("apiSettings").open = true;
     }
 
+    modelSelect.onchange = updateModelSummaryLabel;
+
     document.getElementById("saveKeysBtn").onclick = () => {
         localStorage.setItem("parvez_gemini_keys", document.getElementById("apiKeysInput").value.trim());
-        localStorage.setItem("parvez_gemini_model", document.getElementById("modelSelect").value);
-        setStatus("✅ API Settings saved!", "#d1fae5", "#065f46");
+        localStorage.setItem("parvez_gemini_model", modelSelect.value);
+        localStorage.setItem("parvez_thinking_level", document.getElementById("thinkingSelect").value);
+        updateModelSummaryLabel();
+        setStatus("✅ API & Model Settings saved!", "#d1fae5", "#065f46");
         document.getElementById("apiSettings").open = false;
     };
 
-    // Image Upload & Paste Handling
+    // 3. Image Upload & Paste Handling
     const dropZone = document.getElementById("dropZone");
     const fileInput = document.getElementById("fileInput");
 
@@ -40,8 +61,11 @@ function initApp() {
         }
     };
 
-    // Global Paste (Ctrl+V) for screenshots
     window.addEventListener("paste", (e) => {
+        // Don't hijack paste if typing in textareas/inputs
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+        if (activeTag === "textarea" || activeTag === "input") return;
+
         if (e.clipboardData && e.clipboardData.items) {
             for (let item of e.clipboardData.items) {
                 if (item.type.indexOf("image") !== -1) {
@@ -56,8 +80,148 @@ function initApp() {
 
     document.getElementById("clearImgBtn").onclick = clearImage;
     document.getElementById("extractBtn").onclick = extractFromImageWithAI;
+
+    // 4. Refresh / Clear Text Button & Copy Prompt Button
+    document.getElementById("clearTextBtn").onclick = () => {
+        document.getElementById("rawTextInput").value = "";
+        setStatus("🧹 টেক্সট বক্স খালি করা হয়েছে।", "#e2e8f0", "#334155");
+    };
     document.getElementById("copyPromptBtn").onclick = copyPromptToClipboard;
     document.getElementById("insertFormattedBtn").onclick = formatAndInsertToWord;
+
+    // 5. Error Report & Support Buttons
+    initSupportAndReportSystem();
+}
+
+function updateModelSummaryLabel() {
+    const val = document.getElementById("modelSelect").value;
+    const names = {
+        "3.8-flash": "3.8 Flash",
+        "3.1-pro": "3.1 Pro",
+        "4-argon": "4 Argon"
+    };
+    document.getElementById("activeModelLabel").innerText = names[val] || "3.8 Flash";
+}
+
+// ==========================================
+// ACCOUNT & SUBSCRIPTION SYSTEM
+// ==========================================
+function initAccountSystem() {
+    const savedEmail = localStorage.getItem("parvez_user_email") || "masudparvez@gmail.com";
+    const savedPlan = localStorage.getItem("parvez_user_plan") || "Diamond (1 Year)";
+    const savedExpiry = localStorage.getItem("parvez_user_expiry") || "Expires 10/29/2027 05:31 PM";
+
+    const loggedInView = document.getElementById("loggedInView");
+    const loggedOutView = document.getElementById("loggedOutView");
+
+    function renderAccount() {
+        const currentEmail = localStorage.getItem("parvez_user_email");
+        if (currentEmail) {
+            document.getElementById("userEmailDisplay").innerText = currentEmail;
+            document.getElementById("subPlanName").innerText = localStorage.getItem("parvez_user_plan") || savedPlan;
+            document.getElementById("subExpiryDate").innerText = localStorage.getItem("parvez_user_expiry") || savedExpiry;
+            loggedInView.classList.remove("hidden");
+            loggedOutView.classList.add("hidden");
+        } else {
+            loggedInView.classList.add("hidden");
+            loggedOutView.classList.remove("hidden");
+        }
+    }
+
+    if (!localStorage.getItem("parvez_user_init")) {
+        localStorage.setItem("parvez_user_email", savedEmail);
+        localStorage.setItem("parvez_user_plan", savedPlan);
+        localStorage.setItem("parvez_user_expiry", savedExpiry);
+        localStorage.setItem("parvez_user_init", "1");
+    }
+
+    document.getElementById("signOutBtn").onclick = () => {
+        localStorage.removeItem("parvez_user_email");
+        renderAccount();
+        setStatus("Signed out.", "#e2e8f0", "#334155");
+    };
+
+    document.getElementById("signInBtn").onclick = () => {
+        const email = document.getElementById("loginEmailInput").value.trim();
+        if (!email || !email.includes("@")) {
+            setStatus("⚠️ অনুগ্রহ করে সঠিক ইমেইল দিন!", "#fee2e2", "#991b1b");
+            return;
+        }
+        localStorage.setItem("parvez_user_email", email);
+        localStorage.setItem("parvez_user_plan", "Diamond (1 Year)");
+        localStorage.setItem("parvez_user_expiry", "Expires 10/29/2027 05:31 PM");
+        renderAccount();
+        setStatus("✅ Signed in as " + email, "#d1fae5", "#065f46");
+    };
+
+    renderAccount();
+}
+
+// ==========================================
+// ERROR REPORT, WHATSAPP & EMAIL SUPPORT
+// ==========================================
+function initSupportAndReportSystem() {
+    const reportFileInput = document.getElementById("reportFileInput");
+    const attachStatus = document.getElementById("reportAttachmentStatus");
+
+    document.getElementById("reportImgBtn").onclick = () => reportFileInput.click();
+
+    reportFileInput.onchange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            reportImageName = file.name;
+            attachStatus.innerText = "📎 যুক্ত করা হয়েছে: " + file.name;
+            attachStatus.classList.remove("hidden");
+
+            // Copy image to clipboard if supported so user can Ctrl+V in WhatsApp/Email
+            try {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    setStatus("🖼️ স্ক্রিনশট যুক্ত হয়েছে। Send (➤) চাপুন।", "#dbeafe", "#1e40af");
+                };
+                reader.readAsDataURL(file);
+            } catch (err) {}
+        }
+    };
+
+    document.getElementById("reportSendBtn").onclick = () => {
+        const issueText = document.getElementById("reportTextInput").value.trim();
+        const currentEq = document.getElementById("rawTextInput").value.trim();
+        const userEmail = localStorage.getItem("parvez_user_email") || "Unknown User";
+
+        if (!issueText && !reportImageName) {
+            setStatus("⚠️ সমস্যার বিবরণ/ফিল্ড কোড লিখুন অথবা ছবি যুক্ত করুন!", "#fee2e2", "#991b1b");
+            return;
+        }
+
+        const reportBody =
+            `*Parvez Math Pro (${SUPPORT_CONFIG.appVersion}) - Error Report*\n` +
+            `User: ${userEmail}\n` +
+            `Issue / Unconverted Code: ${issueText || "See attached image"}\n` +
+            (reportImageName ? `Attached Image: ${reportImageName} (Please paste/attach image)\n` : "") +
+            (currentEq ? `\n--- Current EQ Box Content ---\n${currentEq.substring(0, 500)}` : "");
+
+        const waUrl = `https://wa.me/${SUPPORT_CONFIG.whatsappNumber}?text=${encodeURIComponent(reportBody)}`;
+        window.open(waUrl, "_blank");
+
+        document.getElementById("reportTextInput").value = "";
+        reportImageName = null;
+        attachStatus.classList.add("hidden");
+        setStatus("📨 রিপোর্ট পাঠানোর জন্য WhatsApp ওপেন করা হয়েছে!", "#d1fae5", "#065f46");
+    };
+
+    document.getElementById("whatsappSupportBtn").onclick = () => {
+        const userEmail = localStorage.getItem("parvez_user_email") || "";
+        const msg = `হ্যালো Masud Parvej ভাই, আমি Parvez Math Pro (${SUPPORT_CONFIG.appVersion}) ব্যবহার করছি (${userEmail})। আমার কিছু সাহায্য প্রয়োজন।`;
+        window.open(`https://wa.me/${SUPPORT_CONFIG.whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+    };
+
+    document.getElementById("emailSupportBtn").onclick = () => {
+        const userEmail = localStorage.getItem("parvez_user_email") || "";
+        const subject = `Parvez Math Pro (${SUPPORT_CONFIG.appVersion}) Support - ${userEmail}`;
+        const body = `Hello Masud Parvej,\n\nI need support with Parvez Math Pro:\n\n`;
+        window.open(`mailto:${SUPPORT_CONFIG.supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank");
+    };
 }
 
 function setStatus(msg, bg = "#e2e8f0", color = "#334155") {
@@ -135,8 +299,33 @@ function copyPromptToClipboard() {
 }
 
 // ==========================================
-// MULTI-KEY & MULTI-MODEL AI ENGINE
+// SMART MODEL RESOLVER (3.8 Flash, 3.1 Pro, 4 Argon)
 // ==========================================
+function getCandidateEndpoints(selectedTier) {
+    const tierMap = {
+        "3.8-flash": [
+            "gemini-3.8-flash",
+            "gemini-3.0-flash",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash"
+        ],
+        "3.1-pro": [
+            "gemini-3.1-pro",
+            "gemini-3.1-pro-preview",
+            "gemini-2.5-pro",
+            "gemini-2.5-flash"
+        ],
+        "4-argon": [
+            "gemini-4-argon",
+            "gemini-exp-1206",
+            "gemini-3.1-pro",
+            "gemini-2.5-pro",
+            "gemini-2.5-flash"
+        ]
+    };
+    return tierMap[selectedTier] || tierMap["3.8-flash"];
+}
+
 async function extractFromImageWithAI() {
     if (!currentImageBase64) return;
 
@@ -149,22 +338,23 @@ async function extractFromImageWithAI() {
         return;
     }
 
-    const primaryModel = document.getElementById("modelSelect").value;
-    const fallbackModels = [primaryModel, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro"].filter((v, i, a) => a.indexOf(v) === i);
+    const selectedTier = document.getElementById("modelSelect").value;
+    const tierDisplayName = document.getElementById("activeModelLabel").innerText;
+    const candidateModels = getCandidateEndpoints(selectedTier);
 
     const extractBtn = document.getElementById("extractBtn");
     extractBtn.disabled = true;
 
     const promptText = getSystemPrompt();
 
-    for (let mIndex = 0; mIndex < fallbackModels.length; mIndex++) {
-        const model = fallbackModels[mIndex];
-        for (let kIndex = 0; kIndex < keys.length; kIndex++) {
-            const apiKey = keys[kIndex];
-            setStatus(`⏳ Extracting via ${model} (Key #${kIndex + 1})...`, "#fef3c7", "#92400e");
+    for (let kIndex = 0; kIndex < keys.length; kIndex++) {
+        const apiKey = keys[kIndex];
+        for (let mIndex = 0; mIndex < candidateModels.length; mIndex++) {
+            const modelId = candidateModels[mIndex];
+            setStatus(`⏳ Extracting via ${tierDisplayName} (Key #${kIndex + 1})...`, "#fef3c7", "#92400e");
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -185,19 +375,17 @@ async function extractFromImageWithAI() {
 
                 const data = await response.json();
                 let extracted = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                // Clean markdown codeblocks if AI accidentally includes them
                 extracted = extracted.replace(/^```[a-zA-Z]*\n?/gm, "").replace(/```$/gm, "").trim();
 
                 document.getElementById("rawTextInput").value = extracted;
-                setStatus("✅ Extracted! Formatting & Inserting into Word...", "#d1fae5", "#065f46");
+                setStatus(`✅ Extracted with ${tierDisplayName}! Inserting...`, "#d1fae5", "#065f46");
                 extractBtn.disabled = false;
 
-                // Automatically format and insert into Word!
                 await formatAndInsertToWord();
                 return;
 
             } catch (err) {
-                console.warn(`Failed with ${model} (Key ${kIndex + 1}):`, err);
+                console.warn(`Attempt failed for ${modelId} (Key ${kIndex + 1}):`, err);
             }
         }
     }
@@ -220,7 +408,7 @@ function xmlEscape(str) {
 function buildRunProps(opts = {}) {
     const forceTNR = opts.forceTNR || false;
     const csFont = forceTNR ? "Times New Roman" : "Kalpurush";
-    const sizeHalfPts = Math.round((opts.size || 10.5) * 2); // 10.5pt = 21, 7.5pt = 15, 13.5pt = 27
+    const sizeHalfPts = Math.round((opts.size || 10.5) * 2);
     const italicTag = opts.italic ? "<w:i/><w:iCs/>" : "";
     const posTag = opts.position ? `<w:position w:val="${Math.round(opts.position * 2)}"/>` : "";
 
@@ -233,11 +421,9 @@ function buildRunProps(opts = {}) {
         `</w:rPr>`;
 }
 
-// Handles Step 4.1, 5.1, 5.2, 5.3, 5.4 (l italic, lim/log/ln upright, En-Dash, ×, ∫ force TNR)
 function generateTextRuns(text, baseOpts = {}, isInstrText = false) {
     if (!text) return "";
 
-    // Find all upright math functions ('lim', 'log', 'ln') so their 'l' is NOT italicized
     const uprightIndices = new Set();
     const funcRegex = /\b(lim|log|ln)\b/g;
     let match;
@@ -247,12 +433,11 @@ function generateTextRuns(text, baseOpts = {}, isInstrText = false) {
         }
     }
 
-    // Group adjacent characters with identical formatting
     const groups = [];
     for (let i = 0; i < text.length; i++) {
         const ch = text[i];
         const isItalicL = (ch === "l" && !uprightIndices.has(i));
-        const isSpecialTNR = (ch === "\u2013" || ch === "\u00D7" || ch === "\u222B"); // –, ×, ∫
+        const isSpecialTNR = (ch === "\u2013" || ch === "\u00D7" || ch === "\u222B");
 
         const italic = isItalicL ? true : Boolean(baseOpts.italic);
         const forceTNR = isSpecialTNR ? true : Boolean(baseOpts.forceTNR);
@@ -273,13 +458,11 @@ function generateTextRuns(text, baseOpts = {}, isInstrText = false) {
     }).join("");
 }
 
-// Formats inside { EQ ... } according to Step 4.2, 4.3, and Step 5.5
 function buildEqFieldOoxml(eqCode) {
     const n = eqCode.length;
     const charSize = new Array(n).fill(10.5);
     const charForceTNR = new Array(n).fill(false);
 
-    // STEP 4.2 & 4.3: \s\up(4, 7, 10) and \s\do(2, 3, 8, 14, 18, 24) -> Set Size to 7.5
     const shiftRegex = /\\s\\(?:up(?:4|7|10)|do(?:2|3|8|14|18|24))\([^)]*\)/gi;
     let m;
     while ((m = shiftRegex.exec(eqCode)) !== null) {
@@ -288,12 +471,11 @@ function buildEqFieldOoxml(eqCode) {
         }
     }
 
-    // STEP 5.5: Definite integrals \s(upper,∫,lower) -> limits 7.5pt, integral sign 13.5pt
     let searchPos = 0;
     while (searchPos < n) {
         const idx = eqCode.toLowerCase().indexOf("\\s(", searchPos);
         if (idx === -1) break;
-        const openParen = idx + 2; // Position of '('
+        const openParen = idx + 2;
         let pDepth = 0;
         let closeParen = -1;
 
@@ -326,7 +508,6 @@ function buildEqFieldOoxml(eqCode) {
         }
     }
 
-    // Group segments by size and forceTNR, then pass to generateTextRuns
     let instrRuns = "";
     let segStart = 0;
     for (let i = 1; i <= n; i++) {
@@ -340,14 +521,12 @@ function buildEqFieldOoxml(eqCode) {
         }
     }
 
-    // Step 8: Lock field (w:fldLock="true") and mark dirty="true" so Word renders it immediately
     return `<w:r><w:fldChar w:fldCharType="begin" w:fldLock="true" w:dirty="true"/></w:r>` +
            instrRuns +
            `<w:r><w:fldChar w:fldCharType="separate"/></w:r>` +
            `<w:r><w:fldChar w:fldCharType="end"/></w:r>`;
 }
 
-// Formats outside EQ text according to Step 6 (\s\up0) & Step 7 (\s\do0)
 function buildOutsideTextOoxml(text) {
     if (!text) return "";
     const tokenRegex = /\\s\\(up0|do0)\(([^()]*)\)/g;
@@ -362,10 +541,8 @@ function buildOutsideTextOoxml(text) {
         const type = m[1].toLowerCase();
         const content = m[2];
         if (type === "up0") {
-            // Step 6: Size 7.5, Position +3.5pt
             outXml += generateTextRuns(content, { size: 7.5, position: 3.5 });
         } else {
-            // Step 7: Size 7.5, Position -2pt
             outXml += generateTextRuns(content, { size: 7.5, position: -2 });
         }
         lastIdx = m.index + m[0].length;
@@ -378,16 +555,9 @@ function buildOutsideTextOoxml(text) {
 }
 
 function convertRawTextToWordOoxml(rawText) {
-    // STEP 1: Replace standard hyphens (-) with En Dash (\u2013)
     let text = rawText.replace(/-/g, "\u2013");
-
-    // STEP 1.1: Replace Single Quote / Prime (') and ’ with True Math Prime (\u2032)
     text = text.replace(/['\u2019]/g, "\u2032");
-
-    // STEP 1.2: Remove Accidental LaTeX \dot and \cdot -> Unicode middle dot (\u00B7)
     text = text.replace(/\\c?dot/g, "\u00B7");
-
-    // STEP 2.5: Normalize {eq or {EQ to { EQ
     text = text.replace(/\{\s*eq\s+/gi, "{ EQ ");
 
     const lines = text.split(/\r?\n/);
