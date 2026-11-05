@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" 
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" 
+           xsi:type="TaskPaneApp">
+  <Id>8a4f9d2c-5b3e-4e1a-9f8c-7d6e5a4b3c2d</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Masud Parvez</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Parvez Math Pro"/>
+  <Description DefaultValue="Convert Math Images and EQ Codes directly into Formatted MS Word Equations."/>
+  <IconUrl DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/icon-80.png"/>
+  <SupportUrl DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/support.html"/>
+  <AppDomains>
+    <AppDomain>https://masudparvez-stack.github.io</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+          <FunctionFile resid="Commands.Url"/>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="CommandsGroup">
+                <Label resid="CommandsGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/support.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/taskpane.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://masudparvez-stack.github.io/ParvezMathPro/taskpane.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title" DefaultValue="Welcome to Parvez Math Pro!"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Parvez Math"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Math Pro"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description" DefaultValue="Parvez Math Pro loaded successfully. Click 'Math Pro' on the Home tab to start."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open Parvez Math Pro Formatter &amp; OCR"/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

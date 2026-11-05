@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Parvez Math Pro</title>
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link rel="stylesheet" href="taskpane.css" />
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h2>📐 Parvez Math Pro</h2>
+            <p>AI Math OCR &amp; EQ Field Formatter</p>
+        </header>
+
+        <!-- API Settings Collapsible -->
+        <details class="settings-box" id="apiSettings">
+            <summary>⚙️ API Keys &amp; Model Settings</summary>
+            <div class="settings-content">
+                <label>Gemini API Keys (কমা বা নতুন লাইনে একাধিক দিতে পারেন):</label>
+                <textarea id="apiKeysInput" rows="3" placeholder="AIzaSy... (Key 1)&#10;AIzaSy... (Key 2)"></textarea>
+                
+                <label>Primary AI Model:</label>
+                <select id="modelSelect">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Complex Math)</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast Backup)</option>
+                </select>
+                <button id="saveKeysBtn" class="btn-secondary">💾 Save Settings</button>
+            </div>
+        </details>
+
+        <!-- Extraction Mode Switch -->
+        <div class="card">
+            <label for="extractMode"><strong>🎯 Extraction Mode:</strong></label>
+            <select id="extractMode" class="full-select">
+                <option value="questions">শুধু প্রশ্ন (Only Questions)</option>
+                <option value="full">প্রশ্ন ও সমাধান উভয়ই (Full Page / Solutions)</option>
+            </select>
+        </div>
+
+        <!-- Step 1: Image Input -->
+        <div class="card">
+            <label><strong>১. ছবি যুক্ত করুন (Upload or Ctrl+V):</strong></label>
+            <div id="dropZone" class="drop-zone" tabindex="0">
+                <p id="dropText">📁 এখানে ক্লিক করে ছবি নিন<br>অথবা সরাসরি <b>Ctrl + V</b> চেপে পেস্ট করুন</p>
+                <img id="imagePreview" class="hidden" alt="Preview" />
+                <input type="file" id="fileInput" accept="image/*" class="hidden" />
+            </div>
+            <div class="btn-row">
+                <button id="extractBtn" class="btn-primary" disabled>🤖 1. Extract EQ from Image</button>
+                <button id="clearImgBtn" class="btn-danger hidden">✖</button>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="statusBox" class="status-box">Ready.</div>
+
+        <!-- Step 2: Raw Text / Manual Paste & Format -->
+        <div class="card">
+            <div class="label-row">
+                <label><strong>২. EQ টেক্সট প্রিভিউ / ম্যানুয়াল পেস্ট:</strong></label>
+                <button id="copyPromptBtn" class="btn-small" title="Copy prompt for AI Studio">📋 Copy Prompt</button>
+            </div>
+            <textarea id="rawTextInput" rows="7" placeholder="ছবি থেকে অটোমেটিক কোড এখানে আসবে, অথবা AI Studio থেকে কপি করা { EQ ... } টেক্সট এখানে সরাসরি পেস্ট করুন..."></textarea>
+            
+            <button id="insertFormattedBtn" class="btn-success">✨ Format &amp; Insert to Word</button>
+        </div>
+    </div>
+
+    <script src="taskpane.js"></script>
+</body>
+</html>
